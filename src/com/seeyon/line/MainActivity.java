@@ -24,21 +24,29 @@ public class MainActivity extends Activity {
 		setContentView(R.layout.activity_main);
 		body_layout = (FrameLayout) findViewById(R.id.body_layout);
 
-
 		// 初始化一个显示各个点的viewGroup
-		content = new ContentView(this, "123654789",new GestureCallBack() {
+		content = new ContentView(this, "123654789", 4, new GestureCallBack() {
 
 			@Override
 			public void checkedSuccess() {
-				Toast.makeText(MainActivity.this,"校验成功", Toast.LENGTH_SHORT).show();
+				Toast.makeText(MainActivity.this, "校验成功", Toast.LENGTH_SHORT)
+						.show();
 			}
 
 			@Override
 			public void checkedFail() {
-				Toast.makeText(MainActivity.this,"校验失败", Toast.LENGTH_SHORT).show();
+				Toast.makeText(MainActivity.this, "校验失败", Toast.LENGTH_SHORT)
+						.show();
+			}
+
+			@Override
+			public void minLenghtFail() {
+				// TODO Auto-generated method stub
+				Toast.makeText(MainActivity.this, "至少连接4个点", Toast.LENGTH_SHORT)
+						.show();
 			}
 		});
-		//设置手势解锁显示到哪个布局里面
+		// 设置手势解锁显示到哪个布局里面
 		content.setParentView(body_layout);
 	}
 

@@ -39,18 +39,23 @@ public class Drawl extends View {
 	 * 用户绘图的回调
 	 */
 	private GestureCallBack callBack;
-	
+
 	/**
 	 * 用户当前绘制的图形密码
 	 */
 	private StringBuilder passWordSb;
-	
+
 	/**
 	 * 用户传入的passWord
 	 */
 	private String passWord;
+	/**
+	 * 用户连接最小密码长度
+	 */
+	private int minLenght = 0;
 
-	public Drawl(Context context, List<Point> list,String passWord,GestureCallBack callBack) {
+	public Drawl(Context context, List<Point> list, String passWord,int minLenght,
+			GestureCallBack callBack) {
 		super(context);
 		paint = new Paint(Paint.DITHER_FLAG);// 创建一个画笔
 		bitmap = Bitmap.createBitmap(480, 854, Bitmap.Config.ARGB_8888); // 设置位图的宽高
@@ -65,10 +70,13 @@ public class Drawl extends View {
 		this.list = list;
 		this.lineList = new ArrayList<Pair<Point, Point>>();
 		this.callBack = callBack;
-		
-		//初始化密码缓存
+
+		// 初始化密码缓存
 		this.passWordSb = new StringBuilder();
 		this.passWord = passWord;
+		if (minLenght >= 0 && minLenght <= 9) {
+			this.minLenght = minLenght;
+		}
 	}
 
 	// 画位图
@@ -101,19 +109,19 @@ public class Drawl extends View {
 
 			// 得到当前移动位置是处于哪个点内
 			Point pointAt = getPointAt((int) event.getX(), (int) event.getY());
-			//代表当前用户手指处于点与点之前
-			if(currentPoint==null && pointAt == null){
+			// 代表当前用户手指处于点与点之前
+			if (currentPoint == null && pointAt == null) {
 				return true;
-			}else{//代表用户的手指移动到了点上
-				if(currentPoint == null){//先判断当前的point是不是为null
-					//如果为空，那么把手指移动到的点赋值给currentPoint
+			} else {// 代表用户的手指移动到了点上
+				if (currentPoint == null) {// 先判断当前的point是不是为null
+					// 如果为空，那么把手指移动到的点赋值给currentPoint
 					currentPoint = pointAt;
-					//把currentPoint这个点设置选中为true;
+					// 把currentPoint这个点设置选中为true;
 					currentPoint.setHighLighted(true);
 					passWordSb.append(currentPoint.getNum());
 				}
 			}
-			
+
 			if (pointAt == null || currentPoint.equals(pointAt)
 					|| pointAt.isHighLighted()) {
 				// 点击移动区域不在圆的区域 或者
@@ -122,8 +130,6 @@ public class Drawl extends View {
 				canvas.drawLine(currentPoint.getCenterX(),
 						currentPoint.getCenterY(), event.getX(), event.getY(),
 						paint);// 画线
-				
-				
 
 			} else {
 				// 如果当前点击的点与当前移动到的点的位置不同
@@ -133,7 +139,7 @@ public class Drawl extends View {
 						pointAt.getCenterY(), paint);// 画线
 
 				pointAt.setHighLighted(true);
-				
+
 				Pair<Point, Point> pair = new Pair<Point, Point>(currentPoint,
 						pointAt);
 				lineList.add(pair);
@@ -146,18 +152,21 @@ public class Drawl extends View {
 			break;
 		case MotionEvent.ACTION_UP:// 当手指抬起的时候
 			// 清掉屏幕上所有的线，只画上集合里面保存的线
-			if(passWord.equals(passWordSb.toString())){
-				//代表用户绘制的密码手势与传入的密码相同
+			// 判断是否最少绘制了四个点
+			if (passWordSb.toString().length() < minLenght) {
+				callBack.minLenghtFail();
+			} else if (passWord.equals(passWordSb.toString())) {
+				// 代表用户绘制的密码手势与传入的密码相同
 				callBack.checkedSuccess();
-			}else{
-				//用户绘制的密码与传入的密码不同。
+			} else {
+				// 用户绘制的密码与传入的密码不同。
 				callBack.checkedFail();
 			}
-			//重置passWordSb
+			// 重置passWordSb
 			passWordSb = new StringBuilder();
-			//清空保存点的集合
+			// 清空保存点的集合
 			lineList.clear();
-			//重新绘制界面
+			// 重新绘制界面
 			clearScreenAndDrawList();
 			for (Point p : list) {
 				p.setHighLighted(false);
@@ -212,17 +221,22 @@ public class Drawl extends View {
 					pair.second.getCenterX(), pair.second.getCenterY(), paint);// 画线
 		}
 	}
-	
-	public interface GestureCallBack{
-		
+
+	public interface GestureCallBack {
+
 		/**
 		 * 代表用户绘制的密码与传入的密码相同
 		 */
 		public abstract void checkedSuccess();
+
 		/**
 		 * 代表用户绘制的密码与传入的密码不相同
 		 */
 		public abstract void checkedFail();
+		/**
+		 * 代表用户绘制的密码没有达到最少个数
+		 */
+		public abstract void minLenghtFail();
 	}
 
 }
